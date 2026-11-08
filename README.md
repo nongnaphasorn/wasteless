@@ -36,6 +36,13 @@ Wasteless is a web-based operational dashboard engineered for cafés and restaur
 - **Data Visualization:** Chart.js
 - **CSV Data Ingestion:** PapaParse
 - **Artificial Intelligence Engine:** Google Gemini API Integration
+- **Customer Chat:** Botnoi Customer Chat widget
+
+## Botnoi Chat Integration
+
+Both `index.html` and `wasteless_demo_chatbot.html` load the Botnoi customer chat widget using bot ID `6ad663fa0437519b47c20f14`. The widget uses the Wasteless blue theme, Thai locale, and starts closed. The existing “Ask Wasteless” assistant button is positioned at the lower left to keep it clear of Botnoi’s launcher.
+
+To change the displayed name, greetings, theme, or language, edit the `bn-customerchat` attributes near the end of each HTML file. The widget loads from `https://console.botnoi.ai/customerchat/index.js`, so the page needs an internet connection and the Botnoi bot must be available for the deployment domain.
 
 ---
 
