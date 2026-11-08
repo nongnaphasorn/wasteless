@@ -348,7 +348,7 @@ body.ld-open { overflow:hidden; }
         </div>
 
         <div class="ld-visual">
-          <div class="pv-chip c1"><span class="ic">฿</span><span>฿42,850 saved<small>this month · +18.4%</small></span></div>
+          <div class="pv-chip c1"><span class="ic">฿</span><span>฿6,001 at risk<small>9 batches flagged today</small></span></div>
           <div class="pv-card">
             <div class="pv-top">
               <div>
@@ -362,16 +362,16 @@ body.ld-open { overflow:hidden; }
             <div class="pv-bars" id="pvBars"></div>
             <div class="pv-alert"><i></i><span id="pvAlertText">Fresh Milk 2L · 18 bottles · expires in 24h</span></div>
           </div>
-          <div class="pv-chip c2"><span class="ic">↓</span><span>34.2% less waste<small>185 kg prevented</small></span></div>
+          <div class="pv-chip c2"><span class="ic">↓</span><span>Target: 20% less waste<small>measured in the pilot</small></span></div>
         </div>
       </div>
     </div>
   </div>
 
   <div class="ld-stats">
-    <div class="ld-stat"><b>฿42,850</b><span>Money saved this month</span></div>
-    <div class="ld-stat"><b>34.2%</b><span>Food waste reduced</span></div>
-    <div class="ld-stat"><b>94.8%</b><span>Forecast accuracy</span></div>
+    <div class="ld-stat"><b>฿6,001</b><span>Expiring stock flagged on Oct 17</span></div>
+    <div class="ld-stat"><b>20%</b><span>Waste-reduction target for the pilot</span></div>
+    <div class="ld-stat"><b>82.9%</b><span>Baseline forecast accuracy (demo data)</span></div>
   </div>
 
   <div class="ld-wrap">
@@ -556,7 +556,7 @@ body.ld-open { overflow:hidden; }
           </div>
         </div>
         <div class="mt-3">
-          <div class="text-2xl font-bold text-slate-900" id="kpiRev">฿42,850</div>
+          <div class="text-2xl font-bold text-slate-900" id="kpiRev">—</div>
           <div class="flex items-center mt-1 text-xs text-blue-600 font-semibold">
             <span id="kpiRevSub">↑ +18.4% vs last month</span>
           </div>
@@ -571,8 +571,8 @@ body.ld-open { overflow:hidden; }
           </div>
         </div>
         <div class="mt-3">
-          <div class="text-2xl font-bold text-slate-900" id="kpiWaste">34.2%</div>
-          <div class="mt-1 text-xs text-slate-500 font-medium" id="kpiWasteSub">185 kg waste prevented</div>
+          <div class="text-2xl font-bold text-slate-900" id="kpiWaste">—</div>
+          <div class="mt-1 text-xs text-slate-500 font-medium" id="kpiWasteSub">From your Spoilage log</div>
         </div>
       </div>
 
@@ -584,7 +584,7 @@ body.ld-open { overflow:hidden; }
           </div>
         </div>
         <div class="mt-3">
-          <div class="text-2xl font-bold text-slate-900" id="kpiAcc">94.8%</div>
+          <div class="text-2xl font-bold text-slate-900" id="kpiAcc">—</div>
           <div class="flex items-center mt-1 text-xs text-blue-600 font-semibold">
             <span id="kpiAccSub">↑ +2.1% vs actual POS</span>
           </div>
@@ -1306,7 +1306,11 @@ let posSummary = JSON.parse(localStorage.getItem('wasteless_pos_summary') || 'nu
 
 const num = v => (v === undefined || v === null || String(v).trim() === '') ? NaN : Number(v);
 const q = v => (v === undefined || v === null) ? '' : v;
-const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+// Demo date: the dataset and slides are built around Sat Oct 17, 2026 (Sales Fair day 1).
+// Set DEMO_DATE = '' to use the computer's real date again.
+const DEMO_DATE = '2026-10-17';
+const nowDate = () => DEMO_DATE ? new Date(DEMO_DATE + 'T09:00:00') : new Date();
+const todayStr = () => { if (DEMO_DATE) return DEMO_DATE; const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 
 function dateIssue(v) {
   v = q(v).trim();
@@ -1583,7 +1587,7 @@ function renderDashboard() {
     const k = String(l.date || l.timestamp).slice(0, 7);
     if (/^\d{4}-\d{2}$/.test(k)) wasteBy[k] = (wasteBy[k] || 0) + l.qty * (skuCost[l.sku] || 0);
   });
-  const now = new Date(), months = [];
+  const now = nowDate(), months = [];
   for (let k = 5; k >= 0; k--) { const d = new Date(now.getFullYear(), now.getMonth() - k, 1); months.push({ key: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'), label: d.toLocaleString('en', { month: 'short' }) }); }
   const wasteVals = months.map(m => Math.round(wasteBy[m.key] || 0));
   set('kpiWaste', fmt(wasteVals[5]));
@@ -1701,7 +1705,7 @@ const MONTH_IDX = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:
 let todayPos = null; // { w: weekIndex, d: dayIndex } of the real "today" inside the forecast data
 
 function detectToday() {
-  const now = new Date();
+  const now = nowDate();
   todayPos = null;
   fullMonthForecast.forEach((wk, w) => wk.days.forEach((day, d) => {
     const parts = day.dateStr.split(' ');
@@ -1986,6 +1990,7 @@ function updatePredictions() {
       </tr>
     `;
   });
+  recalculateBOM(); // keep the shopping list in step with the selected day
 }
 
 function renderSupplierTabs() {
@@ -2010,12 +2015,15 @@ function recalculateBOM() {
   let grandTotalCost = 0;
   let poLines = [];
 
+  // Order for the day selected in the forecast, including its event/weather multiplier
+  const bomDay = fullMonthForecast[currentMonthWeekIndex].days[selectedDayIndex], bomMult = adjustedMultiplier(bomDay);
+
   const filtered = currentSupplierFilter === 'All' ? rawIngredients : rawIngredients.filter(i => i.supplier === currentSupplierFilter);
 
   filtered.forEach(ing => {
     let totalNeed = 0;
     menuItems.forEach(item => {
-      const forecast = item.baseSales || 50;
+      const forecast = (item.baseSales || 50) * bomMult;
       const needPerUnit = (ing.perUnitNeed && ing.perUnitNeed[item.id]) ? ing.perUnitNeed[item.id] : 0;
       totalNeed += forecast * needPerUnit;
     });
@@ -2045,7 +2053,8 @@ function recalculateBOM() {
 
   document.getElementById('bomTotalCost').innerText = `฿${grandTotalCost.toLocaleString()}`;
   document.getElementById('poMessageArea').value = `[PURCHASE ORDER - Wasteless]
-Date: ${new Date().toLocaleDateString()}
+Date: ${nowDate().toLocaleDateString()}
+For: ${bomDay.dayName} ${bomDay.dateStr} (${bomDay.event}, ×${bomMult.toFixed(2)})
 Items:
 ${poLines.join('\n')}
 Total Estimated Cost: ฿${grandTotalCost.toLocaleString()}`;
